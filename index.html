@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Smart Offer Rotator | Instant Redirect</title>
+    <!-- No indexing, no cache to ensure fresh rotation on every visit -->
+    <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #0b2b2f 0%, #0a1c1f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 1.5rem;
+        }
+
+        /* Modern card with glassmorphism effect */
+        .rotator-card {
+            max-width: 620px;
+            width: 100%;
+            background: rgba(18, 28, 30, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            transition: transform 0.2s ease;
+            text-align: center;
+            padding: 2.2rem 2rem 2.8rem;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #FFFFFF 0%, #D4F1F9 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 0.75rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(0, 212, 180, 0.18);
+            backdrop-filter: blur(4px);
+            padding: 0.35rem 1rem;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: #b6fff0;
+            border: 0.5px solid rgba(0, 255, 213, 0.4);
+            margin-bottom: 1.5rem;
+        }
+
+        .spinner-container {
+            margin: 2rem 0 1.8rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader {
+            width: 58px;
+            height: 58px;
+            border: 4px solid rgba(255, 255, 255, 0.15);
+            border-top: 4px solid #2dd4bf;
+            border-right: 4px solid #38bdf8;
+            border-radius: 50%;
+            animation: spin 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .redirect-message {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #e2f0f5;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 0.7rem 1.2rem;
+            border-radius: 60px;
+            display: inline-block;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .offer-name {
+            font-size: 1rem;
+            font-weight: 600;
+            background: #1e2f33;
+            padding: 0.45rem 1.2rem;
+            border-radius: 40px;
+            color: #cbfdf5;
+            display: inline-block;
+            margin-top: 0.5rem;
+            border: 1px solid rgba(45, 212, 191, 0.4);
+        }
+
+        .info-text {
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            color: #8aaeb6;
+            border-top: 1px dashed rgba(100, 180, 170, 0.4);
+            padding-top: 1.5rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .info-text span {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            font-family: monospace;
+            font-size: 0.7rem;
+        }
+
+        .manual-link {
+            margin-top: 1.2rem;
+            font-size: 0.75rem;
+        }
+
+        .manual-link a {
+            color: #7fd1cb;
+            text-decoration: none;
+            border-bottom: 1px dotted #4aa79e;
+        }
+
+        .manual-link a:hover {
+            color: white;
+            border-bottom: 1px solid white;
+        }
+
+        @media (max-width: 520px) {
+            .rotator-card {
+                padding: 1.8rem 1.2rem 2rem;
+            }
+            h1 {
+                font-size: 1.7rem;
+            }
+            .redirect-message {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="rotator-card" id="rotatorRoot">
+    <h1>⚡ Smart Offer Rotator</h1>
+    <div class="badge">✦ RANDOM DESTINATION · FRESH EVERY VISIT ✦</div>
+
+    <div class="spinner-container">
+        <div class="loader"></div>
+    </div>
+
+    <div class="redirect-message" id="statusMsg">🔀 Selecting premium destination...</div>
+    <div id="offerBadge" class="offer-name">✨ loading offers</div>
+
+    <div class="info-text">
+        <span>🔄 Rotator active</span>
+        <span>🎲 Randomized per session</span>
+        <span>🚀 Instant redirect</span>
+    </div>
+    <div class="manual-link">
+        ⏳ If redirect doesn't start automatically, <a href="#" id="fallbackLink">click here</a>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ------------------------------------------------------------------
+        // COMPLETE LIST OF PROVIDED URLS (exactly as given, no duplicates removed)
+        // but we preserve ALL distinct endpoints. Some may appear twice (like hypergh14x)
+        // but we keep exact list per spec: each visit picks ANY link from below.
+        // According to request: "bau eine landingpage die bei jedem besuch einen anderen link öffnet also wie ein rotator"
+        // So we store all entries from user message.
+        // ------------------------------------------------------------------
+        const rawUrls = [
+            "https://www.vigrxplus.net/ct/958361",
+            "https://www.testosil.com/ct/958361",
+            "https://www.genf20muscle.com/ct/958361",
+            "https://www.erectin.com/ct/958361",
+            "https://www.semenax.com/ct/958361",
+            "https://www.erectingummies.com/ct/958361",
+            "https://www.cortisync.com/ct/958361",
+            "https://www.primegenixbonecomplex.com/ct/958361",
+            "https://www.hypergh14x.com/ct/958361",
+            "https://www.volumepills.com/ct/958361",
+            "https://www.naturalhealthsource.com/ct/958361",
+            "https://www.brainpill.com/ct/958361",
+            "https://www.vigorelle.com/ct/958361",
+            "https://www.provestra.com/ct/958361",
+            "https://www.primegenixprostatesupport.com/ct/958361",
+            "https://www.totalcurve.com/ct/958361",
+            "https://www.dermeffacefx7.com/ct/958361",
+            "https://www.illuminatural6i.com/ct/958361",
+            "https://www.skinception.com/ct/958361",
+            "https://www.kollagenintensiv.com/ct/958361",
+            "https://www.alphamansecret.com/ct/958361",
+            "https://www.hypergh14x.com/ct/958361"   // duplicate as provided (second hypergh14x)
+        ];
+
+        // ensure we have valid list (filter out any empty/invalid if needed, but all good)
+        const validUrls = rawUrls.filter(url => url && url.startsWith("http"));
+
+        if (validUrls.length === 0) {
+            // fallback safety
+            document.getElementById("statusMsg").innerText = "⚠️ Configuration error. Please contact support.";
+            document.getElementById("offerBadge").innerText = "no links available";
+            return;
+        }
+
+        // ----- PICK A RANDOM URL BASED ON CRYPTO OR MATH.RANDOM -----
+        // For true randomness each visit, we use a strong random index.
+        let randomIndex;
+        if (window.crypto && window.crypto.getRandomValues) {
+            const randArray = new Uint32Array(1);
+            window.crypto.getRandomValues(randArray);
+            randomIndex = randArray[0] % validUrls.length;
+        } else {
+            randomIndex = Math.floor(Math.random() * validUrls.length);
+        }
+        
+        const selectedUrl = validUrls[randomIndex];
+        
+        // Extract readable domain name to show user which offer is being loaded (just for visual feedback)
+        let displayDomain = "";
+        try {
+            const urlObj = new URL(selectedUrl);
+            let host = urlObj.hostname.replace("www.", "");
+            // extract main name before .com/.net etc
+            displayDomain = host.split('.')[0];
+            // make it look nice: e.g., vigrxplus, testosil, hypergh14x
+            displayDomain = displayDomain.charAt(0).toUpperCase() + displayDomain.slice(1);
+        } catch(e) {
+            displayDomain = "special offer";
+        }
+        
+        // Update UI with the selected offer name
+        const offerBadgeEl = document.getElementById("offerBadge");
+        const statusMsgEl = document.getElementById("statusMsg");
+        if (offerBadgeEl) {
+            offerBadgeEl.innerText = `🎯 Selected: ${displayDomain}`;
+        }
+        if (statusMsgEl) {
+            statusMsgEl.innerHTML = `✨ Redirecting to <strong>${displayDomain}</strong> · Unique offer ✨`;
+        }
+        
+        // Set fallback link manually
+        const fallbackLink = document.getElementById("fallbackLink");
+        if (fallbackLink) {
+            fallbackLink.href = selectedUrl;
+            fallbackLink.target = "_top";
+            fallbackLink.innerText = `${displayDomain} (direct)`;
+        }
+        
+        // ---- PERFORM REDIRECT ----
+        // We add a small visual delay (0.6 seconds) to make rotation perceptible, but still instant enough
+        // According to best practices: user sees the rotator message then navigates.
+        // This also avoids any potential popup blockers if triggered instantly.
+        // However if you want absolutely immediate redirect, set timeout 0. But 400ms feels professional
+        // and reassures that randomizer worked.
+        const redirectDelayMs = 420;  // smooth experience, ensures any tracking pixels / impression logging
+        
+        let redirectTimer = setTimeout(function() {
+            // final redirect: replace current location (top-level navigation)
+            window.location.replace(selectedUrl);
+        }, redirectDelayMs);
+        
+        // Optional: If user clicks on fallback before redirect, we clear timer to avoid double navigation
+        if (fallbackLink) {
+            fallbackLink.addEventListener("click", function(e) {
+                // prevent default only to clear timer and then manually redirect?
+                // We allow normal click, but also clear timer so no conflict.
+                if (redirectTimer) {
+                    clearTimeout(redirectTimer);
+                }
+                // let the link work normally (href already set)
+            });
+        }
+        
+        // Also add extra safety: after 3 seconds, if redirect somehow didn't happen due to browser weirdness,
+        // force a redirect (but replace already triggered above)
+        setTimeout(function() {
+            if (document && document.visibilityState !== "hidden") {
+                // only if still on page (maybe network error? unlikely)
+                if (window.location.href === window.location.href) { // just check
+                    window.location.replace(selectedUrl);
+                }
+            }
+        }, 1800);
+        
+        // Small helper: show that rotator is live
+        console.log(`[Rotator] ${validUrls.length} offers loaded. Redirecting to: ${selectedUrl}`);
+        
+        // Optional: Prefetch the target to improve perceived speed (optional, but harmless)
+        if (document.createElement("link")) {
+            const preconnectLink = document.createElement("link");
+            try {
+                const targetOrigin = new URL(selectedUrl).origin;
+                preconnectLink.rel = "preconnect";
+                preconnectLink.href = targetOrigin;
+                document.head.appendChild(preconnectLink);
+            } catch(e) {}
+        }
+        
+        // Additional analytics-proof: no cookies or tracking scripts, just rotator
+        // For maximum compatibility we ensure that the page never gets cached, so each visit is fresh.
+        // Already set meta cache-control.
+    })();
+</script>
+</body>
+</html>
